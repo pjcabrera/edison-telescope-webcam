@@ -84,7 +84,7 @@ To install git:
 
     opkg install git
 
-Then clone this repository using `git clone <git repo URL>`.
+Then clone this repository using `git clone <git repo URL>`, then type `cd edison-telescope-webcam`.
 
 #### Installing the UVC driver
 
@@ -123,15 +123,13 @@ If the download doesn't work, the release link may have changed. Check [here](ht
 
 #### Installing Node.js packages
 
-* Navigate to `src/server`.
-* Install the Node.js packages by typing `npm install`.
+From the root folder of the cloned repo, install the Node.js packages by typing `npm install`.
 
 ### Running the demo
 
 #### Running the Node.js server
 
-* Navigate to `src/server`.
-* Run the server by typing `node server.js`.
+From the root folder of the cloned repo, run the server by typing `scripts/start_webcam.sh`.
 
 The Node.js server should now be running. The console will look something like this:
 
@@ -143,6 +141,10 @@ The Node.js server should now be running. The console will look something like t
 #### Viewing the video stream
 
 Open a browser window and navigate to `http://myedison.local:8080`, where `myedison` is the name of your Edison. You should now see the video stream from your webcam!
+
+#### Stopping the Node.js server
+
+From the root folder of the cloned repo, shut down the server by typing `scripts/stop_webcam.sh`.
 
 ## Setting up Edison as a WiFi access point
 
