@@ -14,7 +14,7 @@ app.use(express.static(configServer.staticFolder));
 app.use(morgan('dev'));
 
 // serve index
-require('../lib/routes').serveIndex(app, configServer.staticFolder);
+require('../lib/routes').serveEndpoints(app, configServer.staticFolder);
 
 // HTTP server
 http.createServer(app).listen(app.get('port'), function() {
@@ -74,4 +74,6 @@ http.createServer(function(req, res) {
   console.log('Listening for video stream on port ' + configServer.streamPort);
 });
 
-module.exports.app = app;
+export default {
+  app
+};
