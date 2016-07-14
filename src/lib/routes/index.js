@@ -16,7 +16,7 @@ exports.serveEndpoints = (app, staticFolder) => {
   // Load the single view
   // NB: This needs to be the last route added
   app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: staticFolder });
+    res.sendFile(req.path, { root: staticFolder });
   });
 };
 
