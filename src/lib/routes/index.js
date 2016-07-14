@@ -1,6 +1,10 @@
 import childProcess from 'child_process';
 
 exports.serveEndpoints = (app, staticFolder) => {
+  app.get('/is_video_streaming', (req, res) => {
+    res.send(app.isVideoStreaming ? 'YES' : 'NO');
+  });
+
   app.get('/start_streaming', (req, res) => {
     res.writeHead(200, {'Content-Type': 'text/plain'});
     res.end('start_streaming');
