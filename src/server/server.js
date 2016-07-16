@@ -13,6 +13,8 @@ app.set('port', configServer.httpPort);
 app.use(express.static(configServer.staticFolder));
 app.use(morgan('dev'));
 
+app.isVideoStreaming = false;
+
 // serve index
 require('../lib/routes').serveEndpoints(app, configServer.staticFolder);
 
@@ -67,6 +69,12 @@ http.createServer(function(req, res) {
     ':' + req.socket.remotePort + ' size: ' + width + 'x' + height
   );
 
+  app.isVideoStreaming = true;
+
+  req.socket.on('close', function(data) {
+    app.isVideoStreaming = false;
+  });
+
   req.on('data', function(data) {
     wsServer.broadcast(data, { binary: true });
   });
@@ -74,6 +82,4 @@ http.createServer(function(req, res) {
   console.log('Listening for video stream on port ' + configServer.streamPort);
 });
 
-export default {
-  app
-};
+export default app;
