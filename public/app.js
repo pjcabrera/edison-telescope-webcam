@@ -57,6 +57,8 @@ class Buttons extends React.Component {
     this.state = {
       isVideoStreaming: false
     };
+
+    this.interval = undefined;
   }
 
   componentWillMount() {
@@ -64,11 +66,11 @@ class Buttons extends React.Component {
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
+    if (this.interval) clearInterval(this.interval);
   }
 
   startPollingStreaming(self) {
-    this.interval = setInterval(() => {
+    self.interval = setInterval(() => {
       jQuery.ajax('/is_video_streaming')
       .done((data, textStatus, jqXHR) => {
         console.log('isVideoStreaming ' + data);
@@ -76,7 +78,7 @@ class Buttons extends React.Component {
       })
       .fail((jqXHR, textStatus, error) => {
         console.log('isVideoStreaming ' + error);
-        clearInterval(this.interval);
+        clearInterval(self.interval);
       });
     }, 1000);
   }
