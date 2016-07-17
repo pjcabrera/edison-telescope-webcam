@@ -1,6 +1,22 @@
+'use strict';
+
+// Show loading notice
+var canvas = document.getElementById('canvas-video');
+var ctx = canvas.getContext('2d');
+ctx.fillStyle = '#333';
+ctx.fillText('Loading...', canvas.width / 2 - 30, canvas.height / 3);
+
+const JSMPEG = window.jsmpeg;
+
+// Start the player
+var client = new window.WebSocket('ws://' + document.domain + ':8084');
+var player = new JSMPEG(client, { canvas: canvas });
+player;
+
+const jQuery = window.$;
 
 function startStreaming() {
-  $.ajax('/start_streaming')
+  jQuery.ajax('/start_streaming')
   .done((data, textStatus, jqXHR) => {
     console.log('startStreaming ' + data);
   })
@@ -10,7 +26,7 @@ function startStreaming() {
 }
 
 function stopStreaming() {
-  $.ajax('/stop_streaming')
+  jQuery.ajax('/stop_streaming')
   .done((data, textStatus, jqXHR) => {
     console.log('stopStreaming ' + data);
   })
@@ -20,7 +36,7 @@ function stopStreaming() {
 }
 
 function takePhoto() {
-  $.ajax('/take_photo')
+  jQuery.ajax('/take_photo')
   .done((data, textStatus, jqXHR) => {
     console.log('takePhoto ' + data);
   })
@@ -29,26 +45,38 @@ function takePhoto() {
   });
 }
 
-const Button = ReactBootstrap.Button;
-const ButtonToolbar = ReactBootstrap.ButtonToolbar;
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+const Button = window.ReactBootstrap.Button;
+const ButtonToolbar = window.ReactBootstrap.ButtonToolbar;
 
 class Buttons extends React.Component {
+
   constructor() {
     super();
     this.state = {
       isVideoStreaming: false
     };
+  }
 
-    var myself = this;
-    var interval = setInterval(() => {
-      $.ajax('/is_video_streaming')
+  componentWillMount() {
+    this.startPollingStreaming(this);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  startPollingStreaming(self) {
+    this.interval = setInterval(() => {
+      jQuery.ajax('/is_video_streaming')
       .done((data, textStatus, jqXHR) => {
         console.log('isVideoStreaming ' + data);
-        myself.setState({ isVideoStreaming: data === 'YES' });
+        self.setState({ isVideoStreaming: data === 'YES' });
       })
       .fail((jqXHR, textStatus, error) => {
         console.log('isVideoStreaming ' + error);
-        clearInterval(interval);
+        clearInterval(this.interval);
       });
     }, 1000);
   }

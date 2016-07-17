@@ -1,3 +1,5 @@
+'use strict';
+
 import childProcess from 'child_process';
 
 exports.serveEndpoints = (app, staticFolder) => {
