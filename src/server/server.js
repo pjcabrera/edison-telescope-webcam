@@ -5,6 +5,7 @@ import express from 'express';
 import http from 'http';
 import morgan from 'morgan';
 import ws from 'ws';
+import WebSocket from 'faye-websocket';
 
 // configuration files
 import configServer from '../lib/config/server';
@@ -20,9 +21,33 @@ app.isVideoStreaming = false;
 // serve index
 require('../lib/routes').serveEndpoints(app, configServer.staticFolder);
 
+var webSocketCount = 0;
+var webSocketClients = {};
+
 // HTTP server
 http.createServer(app).listen(app.get('port'), function() {
   console.log('HTTP server listening on port ' + app.get('port'));
+}).on('upgrade', function(request, socket, body) {
+  if (WebSocket.isWebSocket(request)) {
+    var webSocket = new WebSocket(request, socket, body);
+    // Specific id for this client & increment count
+    var id = webSocketCount++;
+    // store the socket so we can contact it when a message comes in
+    webSocketClients[id] = webSocket;
+
+    // new client connects to the server
+    webSocket.on('open', function(event) {
+      console.log('isVideoStreaming client connected');
+      webSocket.send(`{ "isVideoStreaming": ${app.isVideoStreaming} }`);
+    });
+
+    // client disconnects from the server
+    webSocket.on('close', function(event) {
+      console.log('isVideoStreaming client disconnected', event.code, event.reason);
+      delete webSocketClients[id];
+      webSocket = null;
+    });
+  }
 });
 
 // Video streaming section
@@ -64,6 +89,18 @@ wsServer.broadcast = function(data, opts) {
   }
 };
 
+function updateIsVideoStreaming(value) {
+  app.isVideoStreaming = value;
+
+  for (var id in webSocketClients) {
+    if (webSocketClients[id].readyState === 1) {
+      webSocketClients[id].send(`{ "isVideoStreaming": ${value} }`);
+    } else {
+      console.log('Error: Client (' + webSocketClients[id] + ') not connected.');
+    }
+  }
+}
+
 // HTTP server to accept incoming MPEG1 stream
 http.createServer(function(req, res) {
   console.log(
@@ -71,10 +108,10 @@ http.createServer(function(req, res) {
     ':' + req.socket.remotePort + ' size: ' + width + 'x' + height
   );
 
-  app.isVideoStreaming = true;
+  updateIsVideoStreaming(true);
 
   req.socket.on('close', function(data) {
-    app.isVideoStreaming = false;
+    updateIsVideoStreaming(false);
   });
 
   req.on('data', function(data) {
