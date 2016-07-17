@@ -1,3 +1,5 @@
+'use strict';
+
 export default {
   httpPort: 8080,
   streamPort: 8082,
