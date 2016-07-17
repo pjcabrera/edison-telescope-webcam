@@ -57,30 +57,16 @@ class Buttons extends React.Component {
     this.state = {
       isVideoStreaming: false
     };
-
-    this.interval = undefined;
   }
 
   componentWillMount() {
-    this.startPollingStreaming(this);
-  }
-
-  componentWillUnmount() {
-    if (this.interval) clearInterval(this.interval);
-  }
-
-  startPollingStreaming(self) {
-    self.interval = setInterval(() => {
-      jQuery.ajax('/is_video_streaming')
-      .done((data, textStatus, jqXHR) => {
-        console.log('isVideoStreaming ' + data);
-        self.setState({ isVideoStreaming: data === 'YES' });
-      })
-      .fail((jqXHR, textStatus, error) => {
-        console.log('isVideoStreaming ' + error);
-        clearInterval(self.interval);
-      });
-    }, 1000);
+    const wsClient = new window.WebSocket('ws://' + document.domain + ':8080');
+    wsClient.onmessage = (event) => {
+      if (event.data.contains('isVideoStreaming')) {
+        const data = JSON.parse(event.data);
+        this.setState({ isVideoStreaming: data.isVideoStreaming });
+      }
+    };
   }
 
   render() {
