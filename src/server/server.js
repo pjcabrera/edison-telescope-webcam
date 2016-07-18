@@ -59,8 +59,17 @@ var width = 1280;
 var height = 720;
 
 // WebSocket server
-var wsServer = new (ws.Server)({ port: configServer.wsPort });
+var wsServer = new (ws.Server)({ port: configServer.wsPort, verifyClient: limitClients });
 console.log('WebSocket server listening on port ' + configServer.wsPort);
+
+function limitClients(info, cb) {
+  if (wsServer.clients.length >= 2) {
+    if (cb) cb(false, 500, 'Too many clients');
+    return false;
+  }
+  if (cb) cb(true, 200, 'Come on down!');
+  return true;
+}
 
 wsServer.on('connection', function(socket) {
   // Send magic bytes and video size to the newly connected socket
@@ -81,10 +90,13 @@ wsServer.on('connection', function(socket) {
 
 wsServer.broadcast = function(data, opts) {
   for (var i in this.clients) {
-    if (this.clients[i].readyState === 1) {
-      this.clients[i].send(data, opts);
-    } else {
-      console.log('Error: Client (' + i + ') not connected.');
+    // don't broadcast to more than 2 video streaming clients
+    if (this.clients.indexOf(this.clients[i]) < 2) {
+      if (this.clients[i].readyState === 1) {
+        this.clients[i].send(data, opts);
+      } else {
+        console.log('Error: video streaming client (' + i + ') not connected.');
+      }
     }
   }
 };
@@ -96,7 +108,7 @@ function updateIsVideoStreaming(value) {
     if (webSocketClients[id].readyState === 1) {
       webSocketClients[id].send(`{ "isVideoStreaming": ${value} }`);
     } else {
-      console.log('Error: Client (' + webSocketClients[id] + ') not connected.');
+      console.log('Error: isVideoStreaming client (' + webSocketClients[id] + ') not connected.');
     }
   }
 }

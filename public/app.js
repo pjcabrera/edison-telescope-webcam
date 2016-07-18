@@ -1,17 +1,25 @@
 'use strict';
 
-// Show loading notice
-var canvas = document.getElementById('canvas-video');
-var ctx = canvas.getContext('2d');
-ctx.fillStyle = '#333';
-ctx.fillText('Loading...', canvas.width / 2 - 30, canvas.height / 3);
-
 const JSMPEG = window.jsmpeg;
 
-// Start the player
-var client = new window.WebSocket('ws://' + document.domain + ':8084');
-var player = new JSMPEG(client, { canvas: canvas });
-player;
+// Show loading notice
+const canvas = document.getElementById('canvas-video');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#333';
+ctx.fillText('Too many connections, hold on ...', canvas.width / 2 - 70, canvas.height / 3);
+
+var interval = setInterval(() => {
+  var client = new window.WebSocket('ws://' + document.domain + ':8084');
+  client.onclose = (event) => {
+    client = undefined;
+  };
+  client.onopen = (event) => {
+    // Start the player
+    var player = new JSMPEG(client, { canvas: canvas });
+    console.log(player);
+    clearInterval(interval);
+  };
+}, 250);
 
 const jQuery = window.$;
 
