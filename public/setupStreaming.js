@@ -1,5 +1,10 @@
 const JSMPEG = window.jsmpeg;
 
+window.streamPlayer;
+
+var streamClientSocket;
+var streamConnectInterval;
+
 function setupStreaming() {
   // Show loading notice
   const canvas = document.getElementById('canvas-video');
@@ -7,16 +12,22 @@ function setupStreaming() {
   ctx.fillStyle = '#333';
   ctx.fillText('Too many connections, hold on ...', canvas.width / 2 - 70, canvas.height / 3);
 
-  var interval = setInterval(() => {
-    var client = new window.WebSocket('ws://' + document.domain + ':8084');
-    client.onclose = (event) => {
-      client = undefined;
+  streamConnectInterval = setInterval(() => {
+    // sometimes the timer keeps firing after the socket opens
+    if (window.streamPlayer) {
+      clearInterval(streamConnectInterval);
+      return;
+    }
+
+    streamClientSocket = new window.WebSocket('ws://' + document.domain + ':8084');
+    streamClientSocket.onclose = (event) => {
+      streamClientSocket = undefined;
     };
-    client.onopen = (event) => {
+    streamClientSocket.onopen = (event) => {
+      clearInterval(streamConnectInterval);
       // Start the player
-      var player = new JSMPEG(client, { canvas: canvas });
-      console.log(player);
-      clearInterval(interval);
+      window.streamPlayer = new JSMPEG(streamClientSocket, { canvas: canvas });
+      console.log(window.streamPlayer);
     };
   }, 250);
 }
