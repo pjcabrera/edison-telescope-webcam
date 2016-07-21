@@ -21,11 +21,30 @@ const ButtonToolbar = window.ReactBootstrap.ButtonToolbar;
 
 class Buttons extends React.Component {
 
+  constructor() {
+    super();
+    this.state = {
+      isVideoStreaming: false
+    };
+  }
+
+  componentWillMount() {
+    const wsClient = new window.WebSocket('ws://' + document.domain + ':8080');
+    wsClient.onmessage = (event) => {
+      if (event.data.contains('isVideoStreaming')) {
+        const data = JSON.parse(event.data);
+        this.setState({ isVideoStreaming: data.isVideoStreaming });
+      }
+    };
+  }
+
   render() {
+    const isDisabled = !window.streamPlayer || !this.state.isVideoStreaming;
+    const bsStyle = isDisabled ? 'regular' : 'success';
     return (
       <div>
         <ButtonToolbar>
-          <Button bsStyle="success" onClick={takePhoto}>Take Photo</Button>
+          <Button bsStyle={bsStyle} disabled={isDisabled} onClick={takePhoto}>Take Photo</Button>
         </ButtonToolbar>
       </div>
     );
