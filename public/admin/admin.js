@@ -41,7 +41,7 @@ class Buttons extends React.Component {
   componentWillMount() {
     const wsClient = new window.WebSocket('ws://' + document.domain + ':8080');
     wsClient.onmessage = (event) => {
-      if (event.data.contains('isVideoStreaming')) {
+      if (event.data) {
         const data = JSON.parse(event.data);
         this.setState({ isVideoStreaming: data.isVideoStreaming });
       }
