@@ -1,6 +1,6 @@
 'use strict';
 
-import childProcess from 'child_process';
+import { spawn } from 'child_process';
 import StreamSplitter from 'stream-splitter';
 
 exports.serveEndpoints = (app, staticFolder) => {
@@ -29,30 +29,44 @@ exports.serveEndpoints = (app, staticFolder) => {
 
 function startStreaming() {
   setTimeout(() => {
-    childProcess.exec('scripts/start_streaming.sh', (error, stdout, stderr) => {
+    const child = spawn('scripts/start_streaming.sh');
+    child.on('error', (error) => {
       if (error && error.code !== 255) {
         console.log(error.stack);
         console.log('start_streaming.sh error code: ' + error.code);
         console.log('start_streaming.sh signal received: ' + error.signal);
       }
     });
+    child.on('exit', (code, signal) => {
+      if (code !== 255) {
+        console.log('start_streaming.sh exit code: ' + code);
+        console.log('start_streaming.sh signal received: ' + signal);
+      }
+    });
   }, 0);
 }
 
 function stopStreaming() {
-  childProcess.exec('scripts/stop_streaming.sh', (error, stdout, stderr) => {
+  const child = spawn('scripts/stop_streaming.sh');
+  child.on('error', (error) => {
     if (error && error.code !== 255) {
       console.log(error.stack);
       console.log('stop_streaming.sh error code: ' + error.code);
       console.log('stop_streaming.sh signal received: ' + error.signal);
     }
   });
+  child.on('exit', (code, signal) => {
+    if (code !== 255) {
+      console.log('stop_streaming.sh exit code: ' + code);
+      console.log('stop_streaming.sh signal received: ' + signal);
+    }
+  });
 }
 
 function takePhoto(res) {
   stopStreaming();
-  const takePhoto = childProcess.spawn('scripts/take_photo.sh');
-  takePhoto.on('error', (error) => {
+  const child = spawn('scripts/take_photo.sh');
+  child.on('error', (error) => {
     if (error && error.code !== 255) {
       console.log(error.stack);
       console.log('take_photo.sh error code: ' + error.code);
@@ -61,8 +75,11 @@ function takePhoto(res) {
       res.end('take_photo');
     }
   });
+  child.on('exit', (code, signal) => {
+    startStreaming();
+  });
   console.log('take_photo.sh started');
-  var splitter = takePhoto.stdout.pipe(StreamSplitter('\n'));
+  var splitter = child.stdout.pipe(StreamSplitter('\n'));
   splitter.encoding = 'utf8';
 
   splitter.on('token', (token) => {
@@ -71,6 +88,5 @@ function takePhoto(res) {
   });
   splitter.on('done', () => {
     console.log('take_photo.sh finished');
-    startStreaming();
   });
 }
