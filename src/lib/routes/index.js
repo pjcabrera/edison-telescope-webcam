@@ -20,6 +20,10 @@ exports.serveEndpoints = (app, staticFolder) => {
     takePhoto(res);
   });
 
+  app.get('/save_video', (req, res) => {
+    saveVideo(res);
+  });
+
   // Load the single view
   // NB: This needs to be the last route added
   app.get('*', (req, res) => {
@@ -88,5 +92,33 @@ function takePhoto(res) {
   });
   splitter.on('done', () => {
     console.log('take_photo.sh finished');
+  });
+}
+
+function saveVideo(res) {
+  stopStreaming();
+  const child = spawn('scripts/save_video.sh');
+  child.on('error', (error) => {
+    if (error && error.code !== 255) {
+      console.log(error.stack);
+      console.log('save_video.sh error code: ' + error.code);
+      console.log('save_video.sh signal received: ' + error.signal);
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('save_video');
+    }
+  });
+  child.on('exit', (code, signal) => {
+    startStreaming();
+  });
+  console.log('save_video.sh started');
+  var splitter = child.stdout.pipe(StreamSplitter('\n'));
+  splitter.encoding = 'utf8';
+
+  splitter.on('token', (token) => {
+    console.log('save_video.sh stdout ' + token);
+    res.send(token);
+  });
+  splitter.on('done', () => {
+    console.log('save_video.sh finished');
   });
 }
