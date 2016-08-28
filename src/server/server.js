@@ -55,8 +55,8 @@ http.createServer(app).listen(app.get('port'), function() {
 
 var STREAM_MAGIC_BYTES = 'jsmp'; // Must be 4 bytes
 // 720p webcam
-var width = 1280;
-var height = 720;
+var width = 640;
+var height = 480;
 
 // WebSocket server
 var wsServer = new (ws.Server)({ port: configServer.wsPort, verifyClient: limitClients });
