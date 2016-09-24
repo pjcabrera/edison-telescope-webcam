@@ -16,6 +16,18 @@ function takePhoto() {
   });
 }
 
+function saveVideo() {
+  jQuery.ajax('/save_video')
+  .done((data, textStatus, jqXHR) => {
+    console.log('saveVideo ' + data);
+    // the about:blank is to please Chrome, and _blank to please Firefox
+    window.open(data, 'about:blank', '_blank');
+  })
+  .fail((jqXHR, textStatus, error) => {
+    console.log('saveVideo ' + error);
+  });
+}
+
 var streamPlayerCheckInterval;
 
 const React = window.React;
@@ -56,6 +68,7 @@ class Buttons extends React.Component {
       <div>
         <ButtonToolbar>
           <Button bsStyle={bsStyle} disabled={!isEnabled} onClick={takePhoto}>Take Photo</Button>
+          <Button bsStyle={bsStyle} disabled={!isEnabled} onClick={saveVideo}>Save Video</Button>
         </ButtonToolbar>
       </div>
     );
